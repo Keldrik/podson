@@ -45,7 +45,7 @@ function parse(feedXML, callback) {
                 'itunes:subtitle': 'description.short',
                 'description': 'description.long',
                 'ttl': text => { return { ttl: parseInt(text) }; },
-                'pubDate': text => { return { updated: new Date(text) }; },
+                'pubDate': text => { return { updated: new Date(text) }; }
             };
         } else if (node.name === 'itunes:image' && node.parent.name === 'channel') {
             result.image = node.attributes.href;
@@ -98,6 +98,28 @@ function parse(feedXML, callback) {
                     type: node.attributes.type,
                     url: node.attributes.url
                 };
+            } else if (node.name === 'psc:chapter') {
+                if (!tmpEpisode.chapters) {
+                    tmpEpisode.chapters = [];
+                }
+
+                let startTimeTmp = node.attributes.start.split('.')[0];
+
+                let startTime = startTimeTmp.split(':')
+                    .reverse()
+                    .reduce((acc, val, index) => {
+                        const steps = [60, 60, 24];
+                        var muliplier = 1;
+                        while (index--) {
+                            muliplier *= steps[index];
+                        }
+                        return acc + parseInt(val) * muliplier;
+                    }, 0);
+
+                tmpEpisode.chapters.push({
+                    start: startTime,
+                    title: node.attributes.title
+                });
             }
         }
     };
@@ -196,8 +218,8 @@ module.exports = {
 
 
 // Test
-// get('http://feeds.feedburner.com/NodeUp', (err, data) => {
+// get('', (err, data) => {
 //     if (!err) {
-//         console.log(data);
+//         console.log(data.episodes[0]);
 //     }
 // });
