@@ -11,7 +11,10 @@
     "parse",
     "xml"
   ],
-  "repository": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/keldrik/podson"
+  },
   "author": "Thomas Wiegold",
   "license": "MIT",
   "dependencies": {
