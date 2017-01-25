@@ -70,6 +70,7 @@ function parse(feedXML, callback) {
             node.target = tmpEpisode;
             node.textMap = {
                 'title': true,
+                'itunes:subtitle': 'subtitle',
                 'guid': true,
                 'itunes:summary': 'description',
                 'pubDate': text => { return { published: new Date(text) }; },
