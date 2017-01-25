@@ -1,6 +1,6 @@
 {
   "name": "podson",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Reads podcast feeds and converts them into json.",
   "main": "index.js",
   "keywords": [
