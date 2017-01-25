@@ -87,7 +87,8 @@ function parse(feedXML, callback) {
                                 return acc + parseInt(val) * muliplier;
                             }, 0)
                     };
-                }
+                },
+                'content:encoded': 'content'
             };
         } else if (tmpEpisode) {
             if (node.name === 'itunes:image') {
