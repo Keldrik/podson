@@ -27,7 +27,6 @@ function parse(feedXML, callback) {
         }
 
         if (node.name === 'channel') {
-            // root channel
             node.target = result;
             node.textMap = {
                 'title': true,
@@ -36,10 +35,8 @@ function parse(feedXML, callback) {
                     var lang = text;
                     if (!/\w\w-\w\w/i.test(text)) {
                         if (lang === 'en') {
-                            // sloppy language does not conform to ISO 639
                             lang = 'en-us';
                         } else {
-                            // de-de etc
                             lang = `${lang}-${lang}`;
                         }
                     }
@@ -61,7 +58,6 @@ function parse(feedXML, callback) {
         } else if (node.name === 'itunes:category') {
             const path = [node.attributes.text];
             var tmp = node.parent;
-            // go up to fill in parent categories
             while (tmp && tmp.name === 'itunes:category') {
                 path.unshift(tmp.attributes.text);
                 tmp = tmp.parent;
@@ -69,7 +65,6 @@ function parse(feedXML, callback) {
 
             result.categories.push(path.join('>'));
         } else if (node.name === 'item' && node.parent.name === 'channel') {
-            // New item
             tmpEpisode = {
             };
             node.target = tmpEpisode;
@@ -80,7 +75,6 @@ function parse(feedXML, callback) {
                 'pubDate': text => { return { published: new Date(text) }; },
                 'itunes:duration': text => {
                     return {
-                        // parse '1:03:13' into 3793 seconds
                         duration: text
                             .split(':')
                             .reverse()
@@ -96,9 +90,7 @@ function parse(feedXML, callback) {
                 }
             };
         } else if (tmpEpisode) {
-            // Episode specific attributes
             if (node.name === 'itunes:image') {
-                // episode image
                 tmpEpisode.image = node.attributes.href;
             } else if (node.name === 'enclosure') {
                 tmpEpisode.enclosure = {
@@ -128,10 +120,7 @@ function parse(feedXML, callback) {
             return;
         }
 
-        /* istanbul ignore if */
         if (!node || !node.parent) {
-            // This should never happen but it's here as a safety net
-            // I guess this might happen if a feed was incorrectly formatted
             return;
         }
 
@@ -139,13 +128,10 @@ function parse(feedXML, callback) {
             const key = node.parent.textMap[node.name];
             if (key) {
                 if (typeof key === 'function') {
-                    // value preprocessor
                     Object.assign(node.parent.target, key(text));
                 } else {
                     const keyName = key === true ? node.name : key;
                     const prevValue = node.parent.target[keyName];
-                    // ontext can fire multiple times, if so append to previous value
-                    // this happens with "text &amp; other text"
                     _.set(node.parent.target, keyName, prevValue ? `${prevValue} ${text}` : text);
                 }
             }
@@ -160,7 +146,6 @@ function parse(feedXML, callback) {
     };
 
     parser.onend = function () {
-        // sort by date descending
         if (result.episodes) {
             result.episodes = result.episodes.sort((item1, item2) => {
                 return item2.published.getTime() - item1.published.getTime();
@@ -187,18 +172,32 @@ function parse(feedXML, callback) {
     }
 }
 
-request('http://alternativlos.org/alternativlos.rss', (err, res, data) => {
-  if (err) {
-    console.error('Network error', err);
-    return;
-  }
+function get(feedUrl, callback) {
+    request(feedUrl, (err, res, data) => {
+        if (err) {
+            console.error('Network error', err);
+            return;
+        }
 
-  parse(data, (err, data) => {
-    if (err) {
-      console.error('Parsing error', err);
-      return;
-    }
+        parse(data, (err, data) => {
+            if (err) {
+                console.error('Parsing error', err);
+                return;
+            }
 
-    console.log(data);
-  });
-});
+            callback(null, data);
+        });
+    });
+}
+
+module.exports = {
+    get
+};
+
+
+// Test
+// get('http://feeds.feedburner.com/NodeUp', (err, data) => {
+//     if (!err) {
+//         console.log(data);
+//     }
+// });
