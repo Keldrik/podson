@@ -30,6 +30,7 @@ Parses a remote podcast feed and returns javascript object.
       "title":       "Episode Title",
       "subtitle":    "Episode Subtitle",
       "description": "Episode Description",
+      "content":     "<Content Encoded>",
       "image":       "Episode Image",
       "published":   "Date",
       "duration":    456,
