@@ -1,8 +1,19 @@
 const _ = require('lodash');
 const sax = require('sax');
 const request = require('request');
+const winston = require('winston');
 
-function parse(feedXML, callback) {
+const logger = new (winston.Logger)({
+    transports: [
+        new (winston.transports.Console)()
+    ]
+});
+
+const NUM_SECONDS = 60;
+const NUM_MINUTES = 60;
+const NUM_HOURS = 24;
+
+function parse (feedXML, callback) {
     const parser = sax.parser({
         strict: true,
         lowercase: true
@@ -44,8 +55,16 @@ function parse(feedXML, callback) {
                 },
                 'itunes:subtitle': 'description.short',
                 'description': 'description.long',
-                'ttl': text => { return { ttl: parseInt(text) }; },
-                'pubDate': text => { return { updated: new Date(text) }; }
+                'ttl': text => {
+                    return {
+                        ttl: parseInt(text)
+                    };
+                },
+                'pubDate': text => {
+                    return {
+                        updated: new Date(text)
+                    };
+                }
             };
         } else if (node.name === 'itunes:image' && node.parent.name === 'channel') {
             result.image = node.attributes.href;
@@ -73,17 +92,22 @@ function parse(feedXML, callback) {
                 'itunes:subtitle': 'subtitle',
                 'guid': true,
                 'itunes:summary': 'description',
-                'pubDate': text => { return { published: new Date(text) }; },
+                'pubDate': text => {
+                    return {
+                        published: new Date(text)
+                    };
+                },
                 'itunes:duration': text => {
                     return {
                         duration: text
                             .split(':')
                             .reverse()
                             .reduce((acc, val, index) => {
-                                const steps = [60, 60, 24];
+                                const steps = [NUM_SECONDS, NUM_MINUTES, NUM_HOURS];
                                 var muliplier = 1;
-                                while (index--) {
+                                while (index) {
                                     muliplier *= steps[index];
+                                    index = index - 1;
                                 }
                                 return acc + parseInt(val) * muliplier;
                             }, 0)
@@ -110,10 +134,11 @@ function parse(feedXML, callback) {
                 let startTime = startTimeTmp.split(':')
                     .reverse()
                     .reduce((acc, val, index) => {
-                        const steps = [60, 60, 24];
+                        const steps = [NUM_SECONDS, NUM_MINUTES, NUM_HOURS];
                         var muliplier = 1;
-                        while (index--) {
+                        while (index) {
                             muliplier *= steps[index];
+                            index = index - 1;
                         }
                         return acc + parseInt(val) * muliplier;
                     }, 0);
@@ -138,7 +163,7 @@ function parse(feedXML, callback) {
         }
     };
 
-    parser.ontext = parser.oncdata = function handleText(text) {
+    parser.ontext = parser.oncdata = function handleText (text) {
         text = text.trim();
         if (text.length === 0) {
             return;
@@ -196,16 +221,16 @@ function parse(feedXML, callback) {
     }
 }
 
-function get(feedUrl, callback) {
+function get (feedUrl, callback) {
     request(feedUrl, (err, res, data) => {
         if (err) {
-            console.error('Network error', err);
+            logger.error('Network error:', err);
             return;
         }
 
         parse(data, (err, data) => {
             if (err) {
-                console.error('Parsing error', err);
+                logger.error('Parsing error:', err);
                 return;
             }
 
@@ -217,11 +242,3 @@ function get(feedUrl, callback) {
 module.exports = {
     get
 };
-
-
-// Test
-// get('', (err, data) => {
-//     if (!err) {
-//         console.log(data.episodes[0]);
-//     }
-// });

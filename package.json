@@ -3,6 +3,12 @@
   "version": "0.1.2",
   "description": "Reads podcast feeds and converts them into json.",
   "main": "index.js",
+  "scripts": {
+    "test": "mocha test/**",
+    "lint": "eslint . --ext .js --quiet",
+    "precommit": "npm run lint",
+    "prepush": "npm test"
+  },
   "keywords": [
     "podcast",
     "json",
@@ -20,6 +26,12 @@
   "dependencies": {
     "lodash": "^4.17.4",
     "request": "^2.79.0",
-    "sax": "^1.2.1"
+    "sax": "^1.2.1",
+    "winston": "^2.3.1"
+  },
+  "devDependencies": {
+    "eslint": "^3.15.0",
+    "husky": "^0.13.1",
+    "mocha": "^3.2.0"
   }
 }
