@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha test/**",
-    "lint": "eslint . --ext .js --quiet"
+    "lint": "eslint . --ext .js --quiet",
+    "precommit": "npm run lint",
+    "prepush": "npm test"
   },
   "keywords": [
     "podcast",
@@ -29,6 +31,7 @@
   },
   "devDependencies": {
     "eslint": "^3.15.0",
+    "husky": "^0.13.1",
     "mocha": "^3.2.0"
   }
 }
