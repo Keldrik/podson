@@ -54,3 +54,6 @@ yarn.lock
 
 # Test feed file
 test.xml
+
+# Nodenv
+.node-version
