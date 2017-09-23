@@ -52,5 +52,6 @@ yarn.lock
 # VS Code settings
 .vscode
 
-# Test feed file
+# Test feed files
 test.xml
+test.js

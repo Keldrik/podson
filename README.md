@@ -5,6 +5,7 @@ Parses a remote podcast feed and returns javascript object.
 ## Output
 
 ```json
+
 {
   "title":       "Podcast Title",
   "description": {
@@ -51,19 +52,50 @@ Parses a remote podcast feed and returns javascript object.
     }
   ]
 }
+
 ```
 
-## Usage
+## Usage Example with Callback
 
 ```js
+
+var podson = require('podson');
+var feedUrl = 'Podcast Feed URL';
+
+function podsonTest(){
+
+    podson.get(feedUrl, function(err, data) {
+        if(err){
+            console.log(err);
+            return;
+        }
+        console.log(data);
+    });
+    
+}
+
+podsonTest();
+
+```
+
+
+## Usage Example with Async and Await
+
+```js
+
 const podson = require('podson');
+const feedUrl = 'Podcast Feed URL';
 
-podson('podcast Url', (err, data) => {
-  if (err) {
-    console.error(err);
-    return;
-  }
+async function podsonTest() {
+    try {
+        let result = await podson.getPodcast(feedUrl);
+        console.log(result);
 
-  console.log(data);
-});
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+podsonTest();
+
 ```

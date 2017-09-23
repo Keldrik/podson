@@ -3,6 +3,7 @@ const sax = require('sax');
 const request = require('request');
 
 function parse(feedXML, callback) {
+
     const parser = sax.parser({
         strict: true,
         lowercase: true
@@ -199,29 +200,37 @@ function parse(feedXML, callback) {
 function get(feedUrl, callback) {
     request(feedUrl, (err, res, data) => {
         if (err) {
-            console.error('Network error', err);
+            callback(err);
             return;
         }
-
         parse(data, (err, data) => {
             if (err) {
-                console.error('Parsing error', err);
+                callback(err);
                 return;
             }
-
             callback(null, data);
         });
     });
 }
 
+function getPodcast(feedUrl) {
+    return new Promise((resolve, reject) => {
+        request(feedUrl, (err, res, data) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            parse(data, (err, data) => {
+                if (err) {
+                    reject(err);
+                }
+                resolve(data);
+            });
+        });
+    });
+}
+
 module.exports = {
-    get
+    get,
+    getPodcast
 };
-
-
-// Test
-// get('', (err, data) => {
-//     if (!err) {
-//         console.log(data.episodes[0]);
-//     }
-// });
