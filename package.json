@@ -18,8 +18,13 @@
   "author": "Thomas Wiegold",
   "license": "MIT",
   "dependencies": {
-    "lodash": "^4.17.4",
-    "request": "^2.79.0",
-    "sax": "^1.2.1"
+    "lodash": "^4.17.11",
+    "request": "^2.88.0",
+    "sax": "^1.2.4"
+  },
+  "devDependencies": {
+    "eslint": "^5.8.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "prettier": "^1.15.1"
   }
 }
