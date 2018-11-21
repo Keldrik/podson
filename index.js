@@ -41,8 +41,10 @@ function parse(feedXML, callback) {
           }
           return { language: lang.toLowerCase() };
         },
-        'itunes:subtitle': 'description.short',
-        description: 'description.long',
+        'itunes:subtitle': 'subtitle',
+        'itunes:summary': 'summary',
+        description: 'description',
+        'itunes:author': 'author',
         ttl: text => {
           return { ttl: parseInt(text) };
         },
@@ -74,7 +76,8 @@ function parse(feedXML, callback) {
         title: true,
         'itunes:subtitle': 'subtitle',
         guid: true,
-        'itunes:summary': 'description',
+        description: 'description',
+        'itunes:summary': 'summary',
         pubDate: text => {
           return { published: new Date(text) };
         },
@@ -218,6 +221,7 @@ function getPodcast(feedUrl) {
         if (parseErr) {
           reject(parseErr);
         }
+        if (parseData) parseData.feed = feedUrl;
         resolve(parseData);
       });
     });
