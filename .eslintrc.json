@@ -6,8 +6,8 @@
     "comma-dangle": ["error", "never"],
     "radix": "off",
     "arrow-body-style": "off",
-    "no-multi-assign": "warn",
-    "no-param-reassign": "warn",
+    "no-multi-assign": "off",
+    "no-param-reassign": "off",
     "no-plusplus": "off",
     "arrow-parens": "off",
     "no-console": "off"
