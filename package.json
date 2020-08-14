@@ -1,6 +1,6 @@
 {
   "name": "podson",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Reads podcast feeds and converts them into json.",
   "main": "index.js",
   "keywords": [
@@ -18,14 +18,14 @@
   "author": "Thomas Wiegold",
   "license": "MIT",
   "dependencies": {
-    "lodash": "^4.17.11",
-    "request": "^2.88.0",
+    "got": "^11.5.2",
+    "lodash": "^4.17.20",
     "sax": "^1.2.4"
   },
   "devDependencies": {
-    "eslint": "^5.8.0",
-    "eslint-config-airbnb-base": "^13.1.0",
-    "eslint-plugin-import": "^2.14.0",
-    "prettier": "^1.15.1"
+    "eslint": "^7.6.0",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-plugin-import": "^2.22.0",
+    "prettier": "^2.0.5"
   }
 }

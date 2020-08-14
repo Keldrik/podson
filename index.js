@@ -1,24 +1,24 @@
 const _ = require('lodash');
 const sax = require('sax');
-const request = require('request');
+const got = require('got');
 
 function parse(feedXML, callback) {
   const parser = sax.parser({
     strict: true,
-    lowercase: true
+    lowercase: true,
   });
   const result = {
-    categories: []
+    categories: [],
   };
   let node = null;
 
   let tmpEpisode;
 
-  parser.onopentag = nextNode => {
+  parser.onopentag = (nextNode) => {
     node = {
       name: nextNode.name,
       attributes: nextNode.attributes,
-      parent: node
+      parent: node,
     };
 
     if (!node.parent) {
@@ -30,7 +30,7 @@ function parse(feedXML, callback) {
       node.textMap = {
         title: true,
         link: true,
-        language: text => {
+        language: (text) => {
           let lang = text;
           if (!/\w\w-\w\w/i.test(text)) {
             if (lang === 'en') {
@@ -45,12 +45,12 @@ function parse(feedXML, callback) {
         'itunes:summary': 'summary',
         description: 'description',
         'itunes:author': 'author',
-        ttl: text => {
+        ttl: (text) => {
           return { ttl: parseInt(text) };
         },
-        pubDate: text => {
+        pubDate: (text) => {
           return { updated: new Date(text) };
-        }
+        },
       };
     } else if (node.name === 'itunes:image' && node.parent.name === 'channel') {
       result.image = node.attributes.href;
@@ -58,7 +58,7 @@ function parse(feedXML, callback) {
       result.owner = node.target = {};
       node.textMap = {
         'itunes:name': 'name',
-        'itunes:email': 'email'
+        'itunes:email': 'email',
       };
     } else if (node.name === 'itunes:category') {
       const path = [node.attributes.text];
@@ -78,10 +78,10 @@ function parse(feedXML, callback) {
         guid: true,
         description: 'description',
         'itunes:summary': 'summary',
-        pubDate: text => {
+        pubDate: (text) => {
           return { published: new Date(text) };
         },
-        'itunes:duration': text => {
+        'itunes:duration': (text) => {
           return {
             duration: text
               .split(':')
@@ -93,10 +93,10 @@ function parse(feedXML, callback) {
                   muliplier *= steps[index];
                 }
                 return acc + parseInt(val) * muliplier;
-              }, 0)
+              }, 0),
           };
         },
-        'content:encoded': 'content'
+        'content:encoded': 'content',
       };
     } else if (tmpEpisode) {
       if (node.name === 'itunes:image') {
@@ -107,7 +107,7 @@ function parse(feedXML, callback) {
             ? parseInt(node.attributes.length)
             : undefined,
           type: node.attributes.type,
-          url: node.attributes.url
+          url: node.attributes.url,
         };
       } else if (node.name === 'psc:chapter') {
         if (!tmpEpisode.chapters) {
@@ -130,13 +130,13 @@ function parse(feedXML, callback) {
 
         tmpEpisode.chapters.push({
           start: startTime,
-          title: node.attributes.title
+          title: node.attributes.title,
         });
       }
     }
   };
 
-  parser.onclosetag = name => {
+  parser.onclosetag = (name) => {
     node = node.parent;
 
     if (tmpEpisode && name === 'item') {
@@ -210,24 +210,23 @@ function parse(feedXML, callback) {
   }
 }
 
-function getPodcast(feedUrl) {
+async function getPodcast(feedUrl) {
+  const data = await got.get(feedUrl, {
+    http2: true,
+    resolveBodyOnly: true,
+    timeout: 10000,
+  });
   return new Promise((resolve, reject) => {
-    request(feedUrl, (err, res, data) => {
-      if (err) {
-        reject(err);
-        return;
+    parse(data, (parseErr, parseData) => {
+      if (parseErr) {
+        reject(parseErr);
       }
-      parse(data, (parseErr, parseData) => {
-        if (parseErr) {
-          reject(parseErr);
-        }
-        if (parseData) parseData.feed = feedUrl;
-        resolve(parseData);
-      });
+      if (parseData) parseData.feed = feedUrl;
+      resolve(parseData);
     });
   });
 }
 
 module.exports = {
-  getPodcast
+  getPodcast,
 };
