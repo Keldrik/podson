@@ -1,6 +1,7 @@
 # podson
 
-Parses a remote podcast feed and returns javascript object.
+Parses a remote podcast feed and returns a strongly typed object. Written in
+TypeScript for modern Node.js projects.
 
 ## Output
 
@@ -49,12 +50,18 @@ Parses a remote podcast feed and returns javascript object.
 
 ## Usage Example with Async and Await
 
-```js
-const podson = require('podson');
+```ts
+import { getPodcast } from 'podson';
+
 const feedUrl = 'Podcast Feed URL';
 
 (async () => {
-  const x = await podson.getPodcast(feedUrl);
-  console.log(x);
+  const podcast = await getPodcast(feedUrl);
+  console.log(podcast.title);
 })();
 ```
+
+## Building
+
+Run `npm run build` to compile the TypeScript source into the `dist` folder
+before publishing.
