@@ -12,7 +12,7 @@ import uniq from 'lodash/uniq';
 import sax, { Tag } from 'sax';
 import got from 'got';
 
-import { Podcast, Episode, Owner, Enclosure, Chapter } from './types';
+import { Podcast, Episode, Owner } from './types';
 
 interface ParsingNode {
   name: string;
@@ -21,7 +21,7 @@ interface ParsingNode {
   target?: Partial<Podcast> | Partial<Episode> | Partial<Owner>;
   textMap?: Record<
     string,
-    boolean | string | ((text: string) => Record<string, any>)
+    boolean | string | ((text: string) => Record<string, string | number | Date>)
   >;
 }
 
@@ -92,7 +92,7 @@ function parse(feedXML: string): Promise<Podcast> {
       }
 
       if (node.name === 'channel') {
-        node.target = result as Record<string, any>;
+        node.target = result as Record<string, unknown>;
         node.textMap = {
           title: true,
           link: true,
@@ -117,7 +117,7 @@ function parse(feedXML: string): Promise<Podcast> {
       ) {
         const owner: Owner = {};
         result.owner = owner;
-        node.target = owner as Record<string, any>;
+        node.target = owner as Record<string, unknown>;
         node.textMap = {
           'itunes:name': 'name',
           'itunes:email': 'email',
@@ -136,7 +136,7 @@ function parse(feedXML: string): Promise<Podcast> {
         }
       } else if (node.name === 'item' && node.parent.name === 'channel') {
         tmpEpisode = {} as Episode;
-        node.target = tmpEpisode as Record<string, any>;
+        node.target = tmpEpisode as Record<string, unknown>;
         node.textMap = {
           title: true,
           'itunes:subtitle': 'subtitle',
@@ -200,10 +200,10 @@ function parse(feedXML: string): Promise<Podcast> {
             Object.assign(node.parent.target, key(trimmed));
           } else {
             const keyName = key === true ? node.name : key;
-            const prevValue = (node.parent.target as Record<string, any>)[
+            const prevValue = (node.parent.target as Record<string, unknown>)[
               keyName
             ];
-            (node.parent.target as Record<string, any>)[keyName] = prevValue
+            (node.parent.target as Record<string, unknown>)[keyName] = prevValue
               ? `${prevValue} ${trimmed}`
               : trimmed;
           }
@@ -297,13 +297,20 @@ export async function getPodcast(feedUrl: string): Promise<Podcast> {
     const result = await parse(data);
     result.feed = feedUrl;
     return result;
-  } catch (error: any) {
-    if (error.name === 'TimeoutError') {
+  } catch (error: unknown) {
+    if (error instanceof Error && error.name === 'TimeoutError') {
       throw new Error(`Timeout fetching podcast feed: ${feedUrl}`);
     }
-    if (error.response?.statusCode) {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'response' in error &&
+      error.response &&
+      typeof error.response === 'object' &&
+      'statusCode' in error.response
+    ) {
       throw new Error(
-        `Failed to fetch podcast (HTTP ${error.response.statusCode}): ${feedUrl}`,
+        `Failed to fetch podcast (HTTP ${(error.response as { statusCode: number }).statusCode}): ${feedUrl}`,
       );
     }
     const errorMessage =

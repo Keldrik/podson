@@ -5,6 +5,14 @@ import got from 'got';
 // Mock the got module
 vi.mock('got');
 
+// Type for mock got response
+type MockGotResponse = Promise<string> & { text: () => string };
+
+// Type for HTTP errors
+interface HttpError extends Error {
+  response?: { statusCode: number };
+}
+
 describe('getPodcast', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -41,7 +49,7 @@ describe('getPodcast', () => {
         </channel>
       </rss>`;
 
-    const mockResponse = Promise.resolve(mockXML) as any;
+    const mockResponse = Promise.resolve(mockXML) as MockGotResponse;
     mockResponse.text = () => mockXML;
     vi.mocked(got).mockReturnValue(mockResponse);
 
@@ -75,7 +83,7 @@ describe('getPodcast', () => {
         </channel>
       </rss>`;
 
-    const mockResponse = Promise.resolve(mockXML) as any;
+    const mockResponse = Promise.resolve(mockXML) as MockGotResponse;
     mockResponse.text = () => mockXML;
     vi.mocked(got).mockReturnValue(mockResponse);
 
@@ -91,7 +99,7 @@ describe('getPodcast', () => {
         </channel>
       </rss>`;
 
-    const mockResponse = Promise.resolve(mockXML) as any;
+    const mockResponse = Promise.resolve(mockXML) as MockGotResponse;
     mockResponse.text = () => mockXML;
     vi.mocked(got).mockReturnValue(mockResponse);
 
@@ -116,7 +124,7 @@ describe('getPodcast', () => {
           </channel>
         </rss>`;
 
-      const mockResponse = Promise.resolve(mockXML) as any;
+      const mockResponse = Promise.resolve(mockXML) as MockGotResponse;
       mockResponse.text = () => mockXML;
       vi.mocked(got).mockReturnValue(mockResponse);
 
@@ -144,7 +152,7 @@ describe('getPodcast', () => {
         </channel>
       </rss>`;
 
-    const mockResponse = Promise.resolve(mockXML) as any;
+    const mockResponse = Promise.resolve(mockXML) as MockGotResponse;
     mockResponse.text = () => mockXML;
     vi.mocked(got).mockReturnValue(mockResponse);
 
@@ -164,7 +172,7 @@ describe('getPodcast', () => {
         </channel>
       </rss>`;
 
-    const mockResponse = Promise.resolve(mockXML) as any;
+    const mockResponse = Promise.resolve(mockXML) as MockGotResponse;
     mockResponse.text = () => mockXML;
     vi.mocked(got).mockReturnValue(mockResponse);
 
@@ -183,7 +191,7 @@ describe('getPodcast', () => {
         </channel>
       </rss>`;
 
-    const mockResponse = Promise.resolve(mockXML) as any;
+    const mockResponse = Promise.resolve(mockXML) as MockGotResponse;
     mockResponse.text = () => mockXML;
     vi.mocked(got).mockReturnValue(mockResponse);
 
@@ -203,7 +211,7 @@ describe('getPodcast', () => {
         </channel>
       </rss>`;
 
-    const mockResponse = Promise.resolve(mockXML) as any;
+    const mockResponse = Promise.resolve(mockXML) as MockGotResponse;
     mockResponse.text = () => mockXML;
     vi.mocked(got).mockReturnValue(mockResponse);
 
@@ -223,7 +231,7 @@ describe('getPodcast', () => {
         </channel>
       </rss>`;
 
-    const mockResponse = Promise.resolve(mockXML) as any;
+    const mockResponse = Promise.resolve(mockXML) as MockGotResponse;
     mockResponse.text = () => mockXML;
     vi.mocked(got).mockReturnValue(mockResponse);
 
@@ -253,7 +261,7 @@ describe('getPodcast', () => {
         </channel>
       </rss>`;
 
-    const mockResponse = Promise.resolve(mockXML) as any;
+    const mockResponse = Promise.resolve(mockXML) as MockGotResponse;
     mockResponse.text = () => mockXML;
     vi.mocked(got).mockReturnValue(mockResponse);
 
@@ -271,7 +279,7 @@ describe('getPodcast', () => {
         </channel>
       </rss>`;
 
-    const mockResponse = Promise.resolve(mockXML) as any;
+    const mockResponse = Promise.resolve(mockXML) as MockGotResponse;
     mockResponse.text = () => mockXML;
     vi.mocked(got).mockReturnValue(mockResponse);
 
@@ -288,11 +296,11 @@ describe('getPodcast', () => {
         </channel>
       </rss>`;
 
-    const mockResponse = Promise.resolve(mockXML) as any;
+    const mockResponse = Promise.resolve(mockXML) as MockGotResponse;
     mockResponse.text = () => mockXML;
     vi.mocked(got).mockReturnValue(mockResponse);
 
-    const result = await getPodcast('https://example.com/feed.xml');
+    await getPodcast('https://example.com/feed.xml');
     // Note: This tests the concatenation behavior within a single description tag
     // Multiple description tags would be overwritten, not concatenated
   });
@@ -305,7 +313,7 @@ describe('getPodcast', () => {
         </channel>
       </rss>`;
 
-    const mockResponse = Promise.resolve(mockXML) as any;
+    const mockResponse = Promise.resolve(mockXML) as MockGotResponse;
     mockResponse.text = () => mockXML;
     vi.mocked(got).mockReturnValue(mockResponse);
 
@@ -321,7 +329,7 @@ describe('getPodcast', () => {
         </channel>
       </rss>`;
 
-    const mockResponse = Promise.resolve(mockXML) as any;
+    const mockResponse = Promise.resolve(mockXML) as MockGotResponse;
     mockResponse.text = () => mockXML;
     vi.mocked(got).mockReturnValue(mockResponse);
 
@@ -340,7 +348,7 @@ describe('getPodcast', () => {
         </channel>
       </rss>`;
 
-    const mockResponse = Promise.resolve(mockXML) as any;
+    const mockResponse = Promise.resolve(mockXML) as MockGotResponse;
     mockResponse.text = () => mockXML;
     vi.mocked(got).mockReturnValue(mockResponse);
 
@@ -358,7 +366,7 @@ describe('getPodcast', () => {
         </channel>
       </rss>`;
 
-    const mockResponse = Promise.resolve(mockXML) as any;
+    const mockResponse = Promise.resolve(mockXML) as MockGotResponse;
     mockResponse.text = () => mockXML;
     vi.mocked(got).mockReturnValue(mockResponse);
 
@@ -373,7 +381,7 @@ describe('getPodcast', () => {
   it('should throw error on network timeout', async () => {
     const timeoutError = new Error('Timeout');
     timeoutError.name = 'TimeoutError';
-    const mockResponse = Promise.reject(timeoutError) as any;
+    const mockResponse = Promise.reject(timeoutError) as MockGotResponse;
     mockResponse.text = () => {
       throw timeoutError;
     };
@@ -385,9 +393,9 @@ describe('getPodcast', () => {
   });
 
   it('should throw error on HTTP error status', async () => {
-    const httpError: any = new Error('Not Found');
+    const httpError = new Error('Not Found') as HttpError;
     httpError.response = { statusCode: 404 };
-    const mockResponse = Promise.reject(httpError) as any;
+    const mockResponse = Promise.reject(httpError) as MockGotResponse;
     mockResponse.text = () => {
       throw httpError;
     };
@@ -405,7 +413,7 @@ describe('getPodcast', () => {
           <title>Unclosed tag
         </channel>`;
 
-    const mockResponse = Promise.resolve(mockXML) as any;
+    const mockResponse = Promise.resolve(mockXML) as MockGotResponse;
     mockResponse.text = () => mockXML;
     vi.mocked(got).mockReturnValue(mockResponse);
 
@@ -416,7 +424,7 @@ describe('getPodcast', () => {
 
   it('should throw generic error for unknown errors', async () => {
     const unknownError = new Error('Unknown network error');
-    const mockResponse = Promise.reject(unknownError) as any;
+    const mockResponse = Promise.reject(unknownError) as MockGotResponse;
     mockResponse.text = () => {
       throw unknownError;
     };
@@ -435,7 +443,7 @@ describe('getPodcast', () => {
         </channel>
       </rss>`;
 
-    const mockResponse = Promise.resolve(mockXML) as any;
+    const mockResponse = Promise.resolve(mockXML) as MockGotResponse;
     mockResponse.text = () => mockXML;
     vi.mocked(got).mockReturnValue(mockResponse);
 
@@ -455,7 +463,7 @@ describe('getPodcast', () => {
         </channel>
       </rss>`;
 
-    const mockResponse = Promise.resolve(mockXML) as any;
+    const mockResponse = Promise.resolve(mockXML) as MockGotResponse;
     mockResponse.text = () => mockXML;
     vi.mocked(got).mockReturnValue(mockResponse);
 
@@ -473,7 +481,7 @@ describe('getPodcast', () => {
         </channel>
       </rss>`;
 
-    const mockResponse = Promise.resolve(mockXML) as any;
+    const mockResponse = Promise.resolve(mockXML) as MockGotResponse;
     mockResponse.text = () => mockXML;
     vi.mocked(got).mockReturnValue(mockResponse);
 
@@ -494,7 +502,7 @@ describe('getPodcast', () => {
         </channel>
       </rss>`;
 
-    const mockResponse = Promise.resolve(mockXML) as any;
+    const mockResponse = Promise.resolve(mockXML) as MockGotResponse;
     mockResponse.text = () => mockXML;
     vi.mocked(got).mockReturnValue(mockResponse);
 
@@ -511,7 +519,7 @@ describe('getPodcast', () => {
         <channel><title>Test</title></channel>
       </rss>`;
 
-    const mockResponse = Promise.resolve(mockXML) as any;
+    const mockResponse = Promise.resolve(mockXML) as MockGotResponse;
     mockResponse.text = () => mockXML;
     vi.mocked(got).mockReturnValue(mockResponse);
 
@@ -533,7 +541,7 @@ describe('getPodcast', () => {
         </channel>
       </rss>`;
 
-    const mockResponse = Promise.resolve(mockXML) as any;
+    const mockResponse = Promise.resolve(mockXML) as MockGotResponse;
     mockResponse.text = () => mockXML;
     vi.mocked(got).mockReturnValue(mockResponse);
 
@@ -599,7 +607,7 @@ describe('getPodcast', () => {
         </channel>
       </rss>`;
 
-    const mockResponse = Promise.resolve(mockXML) as any;
+    const mockResponse = Promise.resolve(mockXML) as MockGotResponse;
     mockResponse.text = () => mockXML;
     vi.mocked(got).mockReturnValue(mockResponse);
 
