@@ -312,7 +312,7 @@ export async function getPodcast(feedUrl: string): Promise<Podcast> {
       'statusCode' in error.response
     ) {
       throw new Error(
-        `Failed to fetch podcast (HTTP ${(error.response as { statusCode: number }).statusCode}): ${feedUrl}`,
+        `Failed to fetch podcast (HTTP ${(error.response as { statusCode: number }).statusCode}): ${feedUrl}`
       );
     }
     const errorMessage =

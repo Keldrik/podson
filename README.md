@@ -3,50 +3,76 @@
 Parses a remote podcast feed and returns a strongly typed object. Written in
 TypeScript for modern Node.js projects.
 
+## Installation
+
+```bash
+npm install podson
+```
+
+## Features
+
+- Fetches and parses RSS/XML podcast feeds into clean JSON objects
+- Full TypeScript support with comprehensive type definitions
+- Automatic episode sorting by publication date (newest first)
+- Supports podcast chapters, categories, and all standard RSS/iTunes fields
+- Works with both ESM and CommonJS
+- Built-in timeout handling and error management
+
 ## Output
+
+The parsed podcast feed returns a `Podcast` object with the following structure:
 
 ```json
 {
   "title": "Podcast Title",
+  "subtitle": "Podcast Subtitle",
   "summary": "Podcast Summary",
   "description": "Podcast Description",
-  "link": "Podcast Link",
-  "image": "Podcast Image",
-  "language": "Language",
-  "copyright": "Copyright",
-  "updated": "PubDate",
-  "categories": ["Category", "Category Subcategory"],
+  "link": "https://podcast-website.com",
+  "image": "https://podcast-image.com/cover.jpg",
+  "language": "en-us",
+  "author": "Podcast Author",
+  "ttl": 60,
+  "updated": "2024-01-15T10:00:00.000Z",
+  "categories": ["Technology", "Technology>Podcasting"],
   "owner": {
-    "name": "Author Name",
-    "email": "Author Email"
+    "name": "Owner Name",
+    "email": "owner@example.com"
   },
+  "feed": "https://example.com/podcast/feed.xml",
   "episodes": [
     {
-      "guid": "Unique Id",
+      "guid": "episode-unique-id",
       "title": "Episode Title",
       "subtitle": "Episode Subtitle",
       "description": "Episode Description",
       "summary": "Episode Summary",
-      "content": "<Content Encoded>",
-      "image": "Episode Image",
-      "published": "Date",
-      "duration": 456,
-      "categories": ["Category"],
+      "content": "<p>Full HTML content</p>",
+      "image": "https://episode-image.com/cover.jpg",
+      "published": "2024-01-15T10:00:00.000Z",
+      "duration": 1845,
+      "categories": ["Technology"],
       "enclosure": {
         "filesize": 123456789,
-        "type": "Media Type",
-        "url": "File Url"
+        "type": "audio/mpeg",
+        "url": "https://example.com/episode.mp3"
       },
       "chapters": [
         {
-          "start": 123456,
-          "title": "Chapter Title"
+          "start": 0,
+          "title": "Introduction"
+        },
+        {
+          "start": 300,
+          "title": "Main Topic"
         }
       ]
     }
   ]
 }
 ```
+
+**Note:** Most fields are optional as not all podcast feeds include all metadata. The `categories` array is always present but may be empty.
 
 ## Usage
 
@@ -120,7 +146,21 @@ const episodes: Episode[] | undefined = podcast.episodes;
 const categories: string[] = podcast.categories; // Always present, may be empty
 ```
 
-## Building
+## Development
 
-Run `npm run build` to compile the TypeScript source into the `dist` folder
-before publishing.
+```bash
+# Install dependencies
+npm install
+
+# Run tests
+npm test
+
+# Build the package
+npm run build
+
+# Type check
+npm run typecheck
+
+# Lint code
+npm run lint
+```
