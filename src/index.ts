@@ -1,8 +1,18 @@
+/**
+ * @packageDocumentation
+ * Podson - A podcast RSS/XML feed parser that converts podcast feeds into clean JSON objects.
+ *
+ * This module provides functionality to fetch and parse podcast RSS feeds, extracting metadata,
+ * episodes, and related information into well-structured TypeScript interfaces.
+ *
+ * @module podson
+ */
+
 import uniq from 'lodash/uniq';
 import sax, { Tag } from 'sax';
 import got from 'got';
 
-import { Podcast, Episode, Owner } from './types';
+import { Podcast, Episode, Owner, Enclosure, Chapter } from './types';
 
 interface ParsingNode {
   name: string;
@@ -225,6 +235,59 @@ function parse(feedXML: string): Promise<Podcast> {
   });
 }
 
+/**
+ * Fetches and parses a podcast RSS/XML feed into a structured JSON object.
+ *
+ * This is the main function of the podson library. It downloads the podcast feed from the
+ * provided URL, parses the XML, and returns a clean, structured Podcast object with all
+ * episodes and metadata.
+ *
+ * @param feedUrl - The URL of the podcast RSS/XML feed to fetch and parse
+ * @returns A Promise that resolves to a Podcast object containing all feed data
+ *
+ * @throws {Error} When the feed cannot be fetched (network error, timeout, HTTP error)
+ * @throws {Error} When the feed XML cannot be parsed (malformed XML)
+ *
+ * @example
+ * Basic usage:
+ * ```typescript
+ * import { getPodcast } from 'podson';
+ *
+ * const podcast = await getPodcast('https://example.com/podcast/feed.xml');
+ * console.log(podcast.title);
+ * console.log(podcast.episodes?.length);
+ * ```
+ *
+ * @example
+ * With error handling:
+ * ```typescript
+ * import { getPodcast } from 'podson';
+ *
+ * try {
+ *   const podcast = await getPodcast('https://example.com/podcast/feed.xml');
+ *
+ *   // Access podcast metadata
+ *   console.log(`Podcast: ${podcast.title}`);
+ *   console.log(`Author: ${podcast.author}`);
+ *   console.log(`Episodes: ${podcast.episodes?.length}`);
+ *
+ *   // Access latest episode
+ *   if (podcast.episodes && podcast.episodes.length > 0) {
+ *     const latestEpisode = podcast.episodes[0]; // Episodes are sorted newest first
+ *     console.log(`Latest: ${latestEpisode.title}`);
+ *     console.log(`Audio: ${latestEpisode.enclosure?.url}`);
+ *   }
+ * } catch (error) {
+ *   console.error('Failed to fetch podcast:', error.message);
+ * }
+ * ```
+ *
+ * @remarks
+ * - Uses HTTP/2 when available for better performance
+ * - Timeout is set to 10 seconds
+ * - Episodes in the returned object are automatically sorted by publication date (newest first)
+ * - All fields in the Podcast object are optional except 'categories' (which defaults to an empty array)
+ */
 export async function getPodcast(feedUrl: string): Promise<Podcast> {
   try {
     const data = await got(feedUrl, {
@@ -248,5 +311,8 @@ export async function getPodcast(feedUrl: string): Promise<Podcast> {
     throw new Error(`Failed to fetch podcast: ${errorMessage}`);
   }
 }
+
+// Re-export types for developer convenience
+export type { Podcast, Episode, Owner, Enclosure, Chapter } from './types';
 
 export default { getPodcast };
