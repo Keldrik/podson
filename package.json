@@ -2,6 +2,7 @@
   "name": "podson",
   "version": "1.2.0",
   "description": "Reads podcast feeds and converts them into json.",
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "keywords": [
@@ -19,21 +20,26 @@
   "author": "Thomas Wiegold",
   "license": "MIT",
   "scripts": {
-    "build": "tsc -p ."
+    "build": "tsc -p .",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\""
   },
   "dependencies": {
-    "got": "^11.5.2",
-    "lodash": "^4.17.20",
-    "sax": "^1.2.4"
+    "got": "^14.4.5",
+    "lodash": "^4.17.21",
+    "sax": "^1.4.1"
   },
   "devDependencies": {
-    "eslint": "^7.6.0",
-    "eslint-config-airbnb-base": "^14.2.0",
-    "eslint-plugin-import": "^2.22.0",
-    "prettier": "^2.0.5",
-    "typescript": "^5.0.0",
-    "@types/node": "^20.0.0",
-    "@types/lodash": "^4.14.168",
-    "@types/sax": "^1.2.7"
+    "@eslint/js": "^9.17.0",
+    "@types/eslint__js": "^8.42.3",
+    "@types/lodash": "^4.17.13",
+    "@types/node": "^22.10.2",
+    "@types/sax": "^1.2.7",
+    "eslint": "^9.17.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.2"
   }
 }
