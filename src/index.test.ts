@@ -460,7 +460,7 @@ describe('getPodcast', () => {
     expect(result.episodes?.[0].summary).toBe('Episode Summary');
   });
 
-  it('should use http2 and set timeout when fetching', async () => {
+  it('should follow redirects and set timeout when fetching', async () => {
     const mockXML = `<?xml version="1.0" encoding="UTF-8"?>
       <rss version="2.0">
         <channel><title>Test</title></channel>
@@ -471,7 +471,8 @@ describe('getPodcast', () => {
     await getPodcast('https://example.com/feed.xml');
 
     expect(got).toHaveBeenCalledWith('https://example.com/feed.xml', {
-      http2: true,
+      followRedirect: true,
+      maxRedirects: 10,
       timeout: { request: 10000 },
     });
   });

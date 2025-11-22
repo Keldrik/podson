@@ -36,7 +36,7 @@ function parseLanguage(text: string): { language: string } {
 }
 
 function parseTime(text: string): number {
-  if (!text || typeof text !== 'string') return 0;
+  if (!text) return 0;
 
   return text
     .split(':')
@@ -285,7 +285,7 @@ function parse(feedXML: string): Promise<Podcast> {
  * ```
  *
  * @remarks
- * - Uses HTTP/2 when available for better performance
+ * - Follows HTTP redirects automatically (up to 10 redirects)
  * - Timeout is set to 10 seconds
  * - Episodes in the returned object are automatically sorted by publication date (newest first)
  * - All fields in the Podcast object are optional except 'categories' (which defaults to an empty array)
@@ -293,7 +293,8 @@ function parse(feedXML: string): Promise<Podcast> {
 export async function getPodcast(feedUrl: string): Promise<Podcast> {
   try {
     const data = await got(feedUrl, {
-      http2: true,
+      followRedirect: true,
+      maxRedirects: 10,
       timeout: { request: 10000 },
     }).text();
     const result = await parse(data);
@@ -323,5 +324,3 @@ export async function getPodcast(feedUrl: string): Promise<Podcast> {
 
 // Re-export types for developer convenience
 export type { Podcast, Episode, Owner, Enclosure, Chapter } from './types';
-
-export default { getPodcast };
