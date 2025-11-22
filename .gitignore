@@ -4,3 +4,6 @@ node_modules
 package-lock.json
 test.js
 dist
+bun.lock
+.claude
+.DS_Store

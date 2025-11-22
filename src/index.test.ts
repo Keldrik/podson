@@ -72,7 +72,9 @@ describe('getPodcast', () => {
     expect(result.episodes?.[0].title).toBe('Episode 1');
     expect(result.episodes?.[0].guid).toBe('ep1');
     expect(result.episodes?.[0].duration).toBe(1845); // 30:45 in seconds
-    expect(result.episodes?.[0].enclosure?.url).toBe('https://example.com/ep1.mp3');
+    expect(result.episodes?.[0].enclosure?.url).toBe(
+      'https://example.com/ep1.mp3',
+    );
   });
 
   it('should parse language codes correctly', async () => {
@@ -266,7 +268,9 @@ describe('getPodcast', () => {
     vi.mocked(got).mockReturnValue(mockResponse);
 
     const result = await getPodcast('https://example.com/feed.xml');
-    expect(result.episodes?.[0].image).toBe('https://example.com/episode-image.jpg');
+    expect(result.episodes?.[0].image).toBe(
+      'https://example.com/episode-image.jpg',
+    );
   });
 
   it('should handle content:encoded field', async () => {

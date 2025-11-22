@@ -21,7 +21,9 @@ interface ParsingNode {
   target?: Partial<Podcast> | Partial<Episode> | Partial<Owner>;
   textMap?: Record<
     string,
-    boolean | string | ((text: string) => Record<string, string | number | Date>)
+    | boolean
+    | string
+    | ((text: string) => Record<string, string | number | Date>)
   >;
 }
 
@@ -92,7 +94,7 @@ function parse(feedXML: string): Promise<Podcast> {
       }
 
       if (node.name === 'channel') {
-        node.target = result as Record<string, unknown>;
+        node.target = result as unknown as Record<string, unknown>;
         node.textMap = {
           title: true,
           link: true,
@@ -117,7 +119,7 @@ function parse(feedXML: string): Promise<Podcast> {
       ) {
         const owner: Owner = {};
         result.owner = owner;
-        node.target = owner as Record<string, unknown>;
+        node.target = owner as unknown as Record<string, unknown>;
         node.textMap = {
           'itunes:name': 'name',
           'itunes:email': 'email',
@@ -136,7 +138,7 @@ function parse(feedXML: string): Promise<Podcast> {
         }
       } else if (node.name === 'item' && node.parent.name === 'channel') {
         tmpEpisode = {} as Episode;
-        node.target = tmpEpisode as Record<string, unknown>;
+        node.target = tmpEpisode as unknown as Record<string, unknown>;
         node.textMap = {
           title: true,
           'itunes:subtitle': 'subtitle',
