@@ -24,7 +24,11 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/",
     "format": "prettier --write \"src/**/*.ts\"",
-    "format:check": "prettier --check \"src/**/*.ts\""
+    "format:check": "prettier --check \"src/**/*.ts\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "got": "^14.4.5",
@@ -37,9 +41,12 @@
     "@types/lodash": "^4.17.13",
     "@types/node": "^22.10.2",
     "@types/sax": "^1.2.7",
+    "@vitest/ui": "^4.0.13",
     "eslint": "^9.17.0",
+    "happy-dom": "^20.0.10",
     "prettier": "^3.4.2",
     "typescript": "^5.7.2",
-    "typescript-eslint": "^8.18.2"
+    "typescript-eslint": "^8.18.2",
+    "vitest": "^4.0.13"
   }
 }
