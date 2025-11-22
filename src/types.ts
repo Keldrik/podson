@@ -31,12 +31,15 @@ export interface Owner {
 
 export interface Podcast {
   title?: string;
+  subtitle?: string;
   summary?: string;
   description?: string;
   link?: string;
   image?: string;
   language?: string;
   copyright?: string;
+  author?: string;
+  ttl?: number;
   updated?: Date | null;
   categories: string[];
   owner?: Owner;

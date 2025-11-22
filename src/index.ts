@@ -1,20 +1,14 @@
-import _ from 'lodash';
+import uniq from 'lodash/uniq';
 import sax, { Tag } from 'sax';
 import got from 'got';
 
-import {
-  Podcast,
-  Episode,
-  Enclosure,
-  Chapter,
-  Owner,
-} from './types';
+import { Podcast, Episode, Owner } from './types';
 
 interface ParsingNode {
   name: string;
   attributes: Record<string, string>;
   parent: ParsingNode | null;
-  target?: Record<string, any>;
+  target?: Partial<Podcast> | Partial<Episode> | Partial<Owner>;
   textMap?: Record<
     string,
     boolean | string | ((text: string) => Record<string, any>)
@@ -30,17 +24,21 @@ function parseLanguage(text: string): { language: string } {
 }
 
 function parseTime(text: string): number {
+  if (!text || typeof text !== 'string') return 0;
+
   return text
     .split(':')
     .reverse()
     .reduce((acc, val, index) => {
       const steps = [60, 60, 24];
-      let muliplier = 1;
+      let multiplier = 1;
       let i = index;
       while (i--) {
-        muliplier *= steps[i];
+        multiplier *= steps[i];
       }
-      return acc + parseInt(val, 10) * muliplier;
+      const parsed = parseInt(val, 10);
+      if (isNaN(parsed)) return acc;
+      return acc + parsed * multiplier;
     }, 0);
 }
 
@@ -61,7 +59,7 @@ function finalizePodcast(result: Podcast): Podcast {
     }
   }
 
-  result.categories = _.uniq(result.categories.sort());
+  result.categories = uniq(result.categories).sort();
   return result;
 }
 
@@ -96,9 +94,17 @@ function parse(feedXML: string): Promise<Podcast> {
           ttl: (text: string) => ({ ttl: parseInt(text, 10) }),
           pubDate: (text: string) => ({ updated: new Date(text) }),
         };
-      } else if (node.name === 'itunes:image' && node.parent.name === 'channel') {
-        result.image = (node.attributes as Record<string, string>).href;
-      } else if (node.name === 'itunes:owner' && node.parent.name === 'channel') {
+      } else if (
+        node.name === 'itunes:image' &&
+        node.parent.name === 'channel'
+      ) {
+        if (node.attributes?.href) {
+          result.image = node.attributes.href;
+        }
+      } else if (
+        node.name === 'itunes:owner' &&
+        node.parent.name === 'channel'
+      ) {
         const owner: Owner = {};
         result.owner = owner;
         node.target = owner as Record<string, any>;
@@ -107,13 +113,17 @@ function parse(feedXML: string): Promise<Podcast> {
           'itunes:email': 'email',
         };
       } else if (node.name === 'itunes:category') {
-        const path = [node.attributes.text];
-        let tmp: ParsingNode | null = node.parent;
-        while (tmp && tmp.name === 'itunes:category') {
-          path.unshift(tmp.attributes.text);
-          tmp = tmp.parent;
+        if (node.attributes?.text) {
+          const path = [node.attributes.text];
+          let tmp: ParsingNode | null = node.parent;
+          while (tmp && tmp.name === 'itunes:category') {
+            if (tmp.attributes?.text) {
+              path.unshift(tmp.attributes.text);
+            }
+            tmp = tmp.parent;
+          }
+          result.categories.push(path.join('>'));
         }
-        result.categories.push(path.join('>'));
       } else if (node.name === 'item' && node.parent.name === 'channel') {
         tmpEpisode = {} as Episode;
         node.target = tmpEpisode as Record<string, any>;
@@ -129,25 +139,29 @@ function parse(feedXML: string): Promise<Podcast> {
         };
       } else if (tmpEpisode) {
         if (node.name === 'itunes:image') {
-          tmpEpisode.image = (node.attributes as Record<string, string>).href;
+          if (node.attributes?.href) {
+            tmpEpisode.image = node.attributes.href;
+          }
         } else if (node.name === 'enclosure') {
           tmpEpisode.enclosure = {
-            filesize: node.attributes.length
+            filesize: node.attributes?.length
               ? parseInt(node.attributes.length, 10)
               : undefined,
-            type: node.attributes.type,
-            url: node.attributes.url,
+            type: node.attributes?.type,
+            url: node.attributes?.url,
           };
         } else if (node.name === 'psc:chapter') {
-          if (!tmpEpisode.chapters) {
-            tmpEpisode.chapters = [];
+          if (node.attributes?.start && node.attributes?.title) {
+            if (!tmpEpisode.chapters) {
+              tmpEpisode.chapters = [];
+            }
+            const startTimeTmp = node.attributes.start.split('.')[0];
+            const startTime = parseTime(startTimeTmp);
+            tmpEpisode.chapters.push({
+              start: startTime,
+              title: node.attributes.title,
+            });
           }
-          const startTimeTmp = node.attributes.start.split('.')[0];
-          const startTime = parseTime(startTimeTmp);
-          tmpEpisode.chapters.push({
-            start: startTime,
-            title: node.attributes.title,
-          });
         }
       }
     }
@@ -169,14 +183,16 @@ function parse(feedXML: string): Promise<Podcast> {
         return;
       }
 
-      if (node.parent.textMap) {
+      if (node.parent.textMap && node.parent.target) {
         const key = node.parent.textMap[node.name];
         if (key) {
           if (typeof key === 'function') {
-            Object.assign(node.parent.target!, key(trimmed));
+            Object.assign(node.parent.target, key(trimmed));
           } else {
             const keyName = key === true ? node.name : key;
-            const prevValue = (node.parent.target as Record<string, any>)[keyName];
+            const prevValue = (node.parent.target as Record<string, any>)[
+              keyName
+            ];
             (node.parent.target as Record<string, any>)[keyName] = prevValue
               ? `${prevValue} ${trimmed}`
               : trimmed;
@@ -202,21 +218,35 @@ function parse(feedXML: string): Promise<Podcast> {
     try {
       parser.write(feedXML).close();
     } catch (error) {
-      reject(error);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown parsing error';
+      reject(new Error(`Failed to parse podcast feed: ${errorMessage}`));
     }
   });
 }
 
 export async function getPodcast(feedUrl: string): Promise<Podcast> {
-  const data = await got.get(feedUrl, {
-    http2: true,
-    resolveBodyOnly: true,
-    timeout: 10000,
-  });
-  const result = await parse(data);
-  result.feed = feedUrl;
-  return result;
+  try {
+    const data = await got(feedUrl, {
+      http2: true,
+      timeout: { request: 10000 },
+    }).text();
+    const result = await parse(data);
+    result.feed = feedUrl;
+    return result;
+  } catch (error: any) {
+    if (error.name === 'TimeoutError') {
+      throw new Error(`Timeout fetching podcast feed: ${feedUrl}`);
+    }
+    if (error.response?.statusCode) {
+      throw new Error(
+        `Failed to fetch podcast (HTTP ${error.response.statusCode}): ${feedUrl}`,
+      );
+    }
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
+    throw new Error(`Failed to fetch podcast: ${errorMessage}`);
+  }
 }
 
 export default { getPodcast };
-
