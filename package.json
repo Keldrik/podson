@@ -1,6 +1,6 @@
 {
   "name": "podson",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Parses a podcast feed and returns a strongly typed object.",
   "type": "module",
   "main": "./dist/index.cjs",
