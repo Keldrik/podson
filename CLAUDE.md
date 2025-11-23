@@ -9,7 +9,7 @@ This document provides comprehensive guidance for AI assistants working on the *
 - **Language**: TypeScript
 - **Target**: Node.js (ES2020+)
 - **Module Systems**: Both ESM (`.mjs`) and CommonJS (`.cjs`)
-- **Package Manager**: npm (lockfile not tracked, works with npm/yarn/pnpm/bun)
+- **Package Manager**: bun (lockfile not tracked, works with npm/yarn/pnpm/bun)
 - **License**: MIT
 
 ## Repository Structure
@@ -98,22 +98,22 @@ interface ParsingNode {
 ### Setup
 
 ```bash
-npm install          # Install dependencies
+bun install          # Install dependencies
 ```
 
 ### Available Scripts
 
 ```bash
-npm run build        # Build for production (outputs to dist/)
-npm run typecheck    # Type-check without emitting files
-npm run lint         # Lint source files with ESLint
-npm run format       # Format code with Prettier
-npm run format:check # Check formatting without modifying
-npm test             # Run all tests (unit + integration)
-npm run test:watch   # Run tests in watch mode
-npm run test:ui      # Run tests with Vitest UI
-npm run test:coverage # Run tests with coverage report
-npm run test:integration # Run only integration tests
+bun run build        # Build for production (outputs to dist/)
+bun run typecheck    # Type-check without emitting files
+bun run lint         # Lint source files with ESLint
+bun run format       # Format code with Prettier
+bun run format:check # Check formatting without modifying
+bun test             # Run all tests (unit + integration)
+bun run test:watch   # Run tests in watch mode
+bun run test:ui      # Run tests with Vitest UI
+bun run test:coverage # Run tests with coverage report
+bun run test:integration # Run only integration tests
 ```
 
 ### Build Process (tsup)
@@ -146,9 +146,9 @@ npm run test:integration # Run only integration tests
 
 **Run tests**:
 ```bash
-npm test                    # Run all tests
-npm run test:integration    # Run only integration tests
-npm run test:watch          # Watch mode for development
+bun test                    # Run all tests
+bun run test:integration    # Run only integration tests
+bun run test:watch          # Watch mode for development
 ```
 
 ### Code Quality
@@ -256,10 +256,10 @@ git push -u origin <branch-name>
 4. **Add tests** in `src/index.test.ts` (unit) and/or integration test
 5. **Run quality checks**:
    ```bash
-   npm run typecheck
-   npm run lint
-   npm test
-   npm run build
+   bun run typecheck
+   bun run lint
+   bun test
+   bun run build
    ```
 6. **Update README.md** if public API changed
 7. **Commit with descriptive message**
@@ -270,9 +270,9 @@ git push -u origin <branch-name>
 2. **Fix the code** - Minimal changes to address the bug
 3. **Verify the fix**:
    ```bash
-   npm test              # Tests pass
-   npm run typecheck     # No type errors
-   npm run build         # Builds successfully
+   bun test              # Tests pass
+   bun run typecheck     # No type errors
+   bun run build         # Builds successfully
    ```
 4. **Don't over-engineer** - Fix only what's broken
 5. **Commit with clear description** of bug and fix
@@ -292,10 +292,10 @@ git push -u origin <branch-name>
 2. **Update package.json**
 3. **Test thoroughly**:
    ```bash
-   npm install
-   npm test
-   npm run test:integration
-   npm run build
+   bun install
+   bun test
+   bun run test:integration
+   bun run build
    ```
 4. **Document if breaking** - Note in commit message
 
@@ -319,8 +319,8 @@ git push -u origin <branch-name>
 - **All exports documented** with JSDoc
 - **100% type coverage** - no implicit any
 - **Tests for new features** - both unit and integration if applicable
-- **Linting must pass** - `npm run lint` succeeds
-- **Formatting must match** - `npm run format:check` succeeds
+- **Linting must pass** - `bun run lint` succeeds
+- **Formatting must match** - `bun run format:check` succeeds
 
 ### What NOT to Do
 - ❌ Don't add features not requested
@@ -380,10 +380,10 @@ it('should fetch and parse real podcast', async () => {
 
 ## Release Process
 
-1. **Ensure all tests pass**: `npm test`
-2. **Ensure build succeeds**: `npm run build`
-3. **Ensure linting passes**: `npm run lint`
-4. **Ensure formatting is correct**: `npm run format:check`
+1. **Ensure all tests pass**: `bun test`
+2. **Ensure build succeeds**: `bun run build`
+3. **Ensure linting passes**: `bun run lint`
+4. **Ensure formatting is correct**: `bun run format:check`
 5. **Update version** in `package.json`
 6. **Update README** if needed
 7. **Create git tag**: `git tag v2.0.x`
@@ -396,24 +396,24 @@ it('should fetch and parse real podcast', async () => {
 **Build fails**:
 ```bash
 rm -rf dist node_modules
-npm install
-npm run build
+bun install
+bun run build
 ```
 
 **Tests fail**:
 - Check if mocks are properly configured
 - Verify test data matches current implementation
-- Run `npm run test:watch` to debug
+- Run `bun run test:watch` to debug
 
 **Type errors**:
 ```bash
-npm run typecheck  # Shows all type errors
+bun run typecheck  # Shows all type errors
 ```
 
 **Linting errors**:
 ```bash
-npm run lint       # Shows errors
-npm run format     # Auto-fixes formatting
+bun run lint       # Shows errors
+bun run format     # Auto-fixes formatting
 ```
 
 **Integration tests fail**:
