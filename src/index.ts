@@ -8,9 +8,8 @@
  * @module podson
  */
 
-import uniq from 'lodash/uniq';
 import sax, { Tag } from 'sax';
-import got from 'got';
+import got, { HTTPError, TimeoutError } from 'got';
 
 import { Podcast, Episode, Owner } from './types';
 
@@ -27,31 +26,55 @@ interface ParsingNode {
   >;
 }
 
+const languageRegionMap: Record<string, string> = {
+  en: 'en-us',
+  ja: 'ja-jp',
+  zh: 'zh-cn',
+  ko: 'ko-kr',
+  ar: 'ar-sa',
+  he: 'he-il',
+  hi: 'hi-in',
+  ur: 'ur-pk',
+  fa: 'fa-ir',
+  vi: 'vi-vn',
+  th: 'th-th',
+  sv: 'sv-se',
+  da: 'da-dk',
+  nb: 'nb-no',
+  nn: 'nn-no',
+  uk: 'uk-ua',
+  cs: 'cs-cz',
+  el: 'el-gr',
+  sl: 'sl-si',
+  et: 'et-ee',
+  ka: 'ka-ge',
+};
+
 function parseLanguage(text: string): { language: string } {
-  let lang = text;
-  if (!/\w\w-\w\w/i.test(text)) {
-    lang = lang === 'en' ? 'en-us' : `${lang}-${lang}`;
+  const lang = text.trim().toLowerCase();
+  if (/^[a-z]{2,3}[_-][a-z]{2,4}$/i.test(lang)) {
+    return { language: lang.replace('_', '-') };
   }
-  return { language: lang.toLowerCase() };
+  if (languageRegionMap[lang]) {
+    return { language: languageRegionMap[lang] };
+  }
+  if (/^[a-z]{2}$/.test(lang)) {
+    return { language: `${lang}-${lang}` };
+  }
+  return { language: lang };
 }
 
 function parseTime(text: string): number {
   if (!text) return 0;
 
-  return text
-    .split(':')
-    .reverse()
-    .reduce((acc, val, index) => {
-      const steps = [60, 60, 24];
-      let multiplier = 1;
-      let i = index;
-      while (i--) {
-        multiplier *= steps[i];
-      }
-      const parsed = parseInt(val, 10);
-      if (isNaN(parsed)) return acc;
-      return acc + parsed * multiplier;
-    }, 0);
+  const parts = text.split(':').slice(0, 3);
+  const multipliers = [1, 60, 3600];
+
+  return parts.reverse().reduce((acc, val, index) => {
+    const parsed = parseInt(val, 10);
+    if (isNaN(parsed) || parsed < 0) return acc;
+    return acc + parsed * multipliers[index];
+  }, 0);
 }
 
 function finalizePodcast(result: Podcast): Podcast {
@@ -71,13 +94,13 @@ function finalizePodcast(result: Podcast): Podcast {
     }
   }
 
-  result.categories = uniq(result.categories).sort();
+  result.categories = [...new Set(result.categories)].sort();
   return result;
 }
 
 function parse(feedXML: string): Promise<Podcast> {
   return new Promise((resolve, reject) => {
-    const parser = sax.parser(true, { lowercase: true });
+    const parser = sax.parser(false, { lowercase: true });
     const result: Podcast = { categories: [] };
     let node: ParsingNode | null = null;
     let tmpEpisode: Episode | undefined;
@@ -103,8 +126,9 @@ function parse(feedXML: string): Promise<Podcast> {
           'itunes:summary': 'summary',
           description: 'description',
           'itunes:author': 'author',
+          copyright: true,
           ttl: (text: string) => ({ ttl: parseInt(text, 10) }),
-          pubDate: (text: string) => ({ updated: new Date(text) }),
+          pubdate: (text: string) => ({ updated: new Date(text) }),
         };
       } else if (
         node.name === 'itunes:image' &&
@@ -145,7 +169,7 @@ function parse(feedXML: string): Promise<Podcast> {
           guid: true,
           description: 'description',
           'itunes:summary': 'summary',
-          pubDate: (text: string) => ({ published: new Date(text) }),
+          pubdate: (text: string) => ({ published: new Date(text) }),
           'itunes:duration': (text: string) => ({ duration: parseTime(text) }),
           'content:encoded': 'content',
         };
@@ -179,6 +203,19 @@ function parse(feedXML: string): Promise<Podcast> {
     }
 
     function handleCloseTag(name: string) {
+      if (node && node.parent?.textMap && node.parent?.target) {
+        const key = node.parent.textMap[node.name];
+        if (key && typeof key !== 'function') {
+          const keyName = key === true ? node.name : key;
+          const value = (node.parent.target as Record<string, unknown>)[
+            keyName
+          ];
+          if (typeof value === 'string') {
+            (node.parent.target as Record<string, unknown>)[keyName] =
+              value.trim();
+          }
+        }
+      }
       node = node ? node.parent : null;
       if (tmpEpisode && name === 'item') {
         if (!result.episodes) {
@@ -190,8 +227,7 @@ function parse(feedXML: string): Promise<Podcast> {
     }
 
     function handleText(text: string) {
-      const trimmed = text.trim();
-      if (trimmed.length === 0 || !node || !node.parent) {
+      if (!text || !node || !node.parent) {
         return;
       }
 
@@ -199,15 +235,15 @@ function parse(feedXML: string): Promise<Podcast> {
         const key = node.parent.textMap[node.name];
         if (key) {
           if (typeof key === 'function') {
-            Object.assign(node.parent.target, key(trimmed));
+            Object.assign(node.parent.target, key(text.trim()));
           } else {
             const keyName = key === true ? node.name : key;
             const prevValue = (node.parent.target as Record<string, unknown>)[
               keyName
             ];
             (node.parent.target as Record<string, unknown>)[keyName] = prevValue
-              ? `${prevValue} ${trimmed}`
-              : trimmed;
+              ? `${prevValue}${text}`
+              : text;
           }
         }
       }
@@ -216,13 +252,16 @@ function parse(feedXML: string): Promise<Podcast> {
         if (!tmpEpisode.categories) {
           tmpEpisode.categories = [];
         }
-        tmpEpisode.categories.push(trimmed);
+        tmpEpisode.categories.push(text.trim());
       }
     }
 
     parser.onopentag = handleOpenTag;
     parser.onclosetag = handleCloseTag;
     parser.ontext = parser.oncdata = handleText;
+    parser.onerror = (err: Error) => {
+      reject(new Error(`Failed to parse podcast feed: ${err.message}`));
+    };
     parser.onend = () => {
       resolve(finalizePodcast(result));
     };
@@ -292,6 +331,12 @@ function parse(feedXML: string): Promise<Podcast> {
  */
 export async function getPodcast(feedUrl: string): Promise<Podcast> {
   try {
+    new URL(feedUrl);
+  } catch {
+    throw new Error(`Invalid podcast feed URL: ${feedUrl}`);
+  }
+
+  try {
     const data = await got(feedUrl, {
       followRedirect: true,
       maxRedirects: 10,
@@ -301,24 +346,22 @@ export async function getPodcast(feedUrl: string): Promise<Podcast> {
     result.feed = feedUrl;
     return result;
   } catch (error: unknown) {
-    if (error instanceof Error && error.name === 'TimeoutError') {
-      throw new Error(`Timeout fetching podcast feed: ${feedUrl}`);
+    if (error instanceof TimeoutError) {
+      throw new Error(`Timeout fetching podcast feed: ${feedUrl}`, {
+        cause: error,
+      });
     }
-    if (
-      error &&
-      typeof error === 'object' &&
-      'response' in error &&
-      error.response &&
-      typeof error.response === 'object' &&
-      'statusCode' in error.response
-    ) {
+    if (error instanceof HTTPError) {
       throw new Error(
-        `Failed to fetch podcast (HTTP ${(error.response as { statusCode: number }).statusCode}): ${feedUrl}`
+        `Failed to fetch podcast (HTTP ${error.response.statusCode}): ${feedUrl}`,
+        { cause: error }
       );
     }
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error';
-    throw new Error(`Failed to fetch podcast: ${errorMessage}`);
+    throw new Error(`Failed to fetch podcast: ${errorMessage}`, {
+      cause: error,
+    });
   }
 }
 

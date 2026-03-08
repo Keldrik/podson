@@ -12,7 +12,7 @@ export default defineConfig({
   target: 'es2020',
   outDir: 'dist',
   // Keep external dependencies external (not bundled)
-  external: ['got', 'sax', 'lodash'],
+  external: ['got', 'sax'],
   // Preserve modules for better tree-shaking
   shims: false,
   // Generate both index.js (CJS) and index.mjs (ESM)
